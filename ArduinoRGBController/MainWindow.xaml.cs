@@ -1,20 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management;
 using System.IO.Ports;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Threading;
 
@@ -73,18 +63,23 @@ namespace ArduinoRGBController
             }
         }
 
+
         private bool InitSerialConnection()
         {
-            ArduinoSerial = new SerialPort(ArduinoCOM, 115200);
-            ArduinoSerial.ReadBufferSize = 1024;
-            ArduinoSerial.WriteBufferSize = 1024;
+            ArduinoSerial = new SerialPort(ArduinoCOM, 115200)
+            {
+                ReadBufferSize = 1024,
+                WriteBufferSize = 1024
+            };
             if (!ArduinoSerial.IsOpen)
             {
                 try
                 {
                     ArduinoSerial.Open();
-                    serialThread = new Thread(ArduinoSerial_DataReceived);
-                    serialThread.IsBackground = true;
+                    serialThread = new Thread(ArduinoSerial_DataReceived)
+                    {
+                        IsBackground = true
+                    };
                     serialThread.Start();
                     return true;
                 }
@@ -95,6 +90,7 @@ namespace ArduinoRGBController
             }
             return false;
         }
+
 
         private void ArduinoSerial_DataReceived()
         {
@@ -179,7 +175,8 @@ namespace ArduinoRGBController
             }
         }
 
-        private string AutodetectArduinoPort()
+
+        private string AutodetectArduinoPortString()
         {
             ManagementScope connectionScope = new ManagementScope();
             SelectQuery serialQuery = new SelectQuery("SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%COM%'");
@@ -191,13 +188,13 @@ namespace ArduinoRGBController
                 {
                     string desc = item["Description"].ToString();
 
-                    if (desc.Contains("CH340"))
+                    if (desc.Contains("CH340")) // Found arduino
                     {
                         return item["Name"].ToString();
                     }
                 }
             }
-            catch (ManagementException e)
+            catch (ManagementException)
             {
                 /* Do Nothing */
             }
@@ -205,9 +202,10 @@ namespace ArduinoRGBController
             return null;
         }
 
+
         bool FindArduino()
         {
-            var port = AutodetectArduinoPort();
+            var port = AutodetectArduinoPortString();
             if (!string.IsNullOrEmpty(port))
             {
                 string com = port.Split('(')[1].Trim();
@@ -225,7 +223,7 @@ namespace ArduinoRGBController
         }
 
 
-        bool CheckConnection(object sender, EventArgs e)
+        bool CheckConnection(object sender, EventArgs e) // Dispatcher func
         {
             if (ArduinoSerial == null)
             {
@@ -255,6 +253,7 @@ namespace ArduinoRGBController
             CheckConnection(sender, e);
         }
 
+
         private void ToggleAnimReal(object sender, MouseButtonEventArgs e)
         {
             if (sender is Button)
@@ -276,7 +275,14 @@ namespace ArduinoRGBController
             }
         }
 
+
         ~MainWindow()
+        {
+            Dispose();
+        }
+
+
+        void Dispose()
         {
             if (ArduinoSerial != null)
             {
@@ -289,10 +295,12 @@ namespace ArduinoRGBController
             }
         }
 
+
         private void brightness_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             CheckConnection(sender, e);
         }
+
 
         private void brightness_ValueChangedReal(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -301,10 +309,12 @@ namespace ArduinoRGBController
             Debug.WriteLine($"$3, {val}^");
         }
 
+
         private void animSpeed_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             CheckConnection(sender, e);
         }
+
 
         private void animSpeed_ValueChangedReal(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -313,10 +323,13 @@ namespace ArduinoRGBController
             Debug.WriteLine($"$4, {val}^");
         }
 
+
         private void Button_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            var picker = new StaticColorPicker();
-            picker.Owner = this;
+            var picker = new StaticColorPicker
+            {
+                Owner = this
+            };
             picker.colorPicker.SelectedColorChanged += ColorPicker_SelectedColorChanged;
             if (picker.ShowDialog() == true)
             {
@@ -324,6 +337,7 @@ namespace ArduinoRGBController
             }
             picker.colorPicker.SelectedColorChanged -= ColorPicker_SelectedColorChanged;
         }
+
 
         private void ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
         {
@@ -333,6 +347,21 @@ namespace ArduinoRGBController
             }
             CheckConnection(sender, e);
         }
+
+
+        private void ColorPicker_SelectedColorChangedReal(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            var color = e.NewValue.Value;
+            ArduinoSerial.Write($"$5, {color.R}, {color.G}, {color.B}^");
+            Debug.WriteLine($"$5, {color.R}, {color.G}, {color.B}^");
+        }
+
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Dispose();
+        }
+
 
         private void Window_StateChanged(object sender, EventArgs e)
         {
@@ -351,14 +380,6 @@ namespace ArduinoRGBController
                 default:
                     break;
             }
-        }
-
-
-        private void ColorPicker_SelectedColorChangedReal(object sender, RoutedPropertyChangedEventArgs<Color?> e)
-        {
-            var color = e.NewValue.Value;
-            ArduinoSerial.Write($"$5, {color.R}, {color.G}, {color.B}^");
-            Debug.WriteLine($"$5, {color.R}, {color.G}, {color.B}^");
         }
     }
 }
