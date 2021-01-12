@@ -378,11 +378,13 @@ namespace ArduinoRGBController
                     notifyIcon.Visibility = Visibility.Hidden;
                     ShowInTaskbar = true;
                     Monitor.Exit(SerialThreadLock);
+                    ArduinoSerial.Open();
                     break;
                 case WindowState.Minimized:
                     notifyIcon.Visibility = Visibility.Visible;
                     ShowInTaskbar = false;
                     Monitor.Enter(SerialThreadLock);
+                    ArduinoSerial.Close();
                     break;
                 case WindowState.Maximized:
                     break;
