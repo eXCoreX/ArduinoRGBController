@@ -53,11 +53,14 @@ namespace ArduinoRGBController
 
         private Thread serialThread;
 
+        public static object SerialThreadLock { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
+            SerialThreadLock = new object();
 
-            if(FindArduino())
+            if (FindArduino())
             {
                 InitSerialConnection();
             }
@@ -76,6 +79,7 @@ namespace ArduinoRGBController
                 try
                 {
                     ArduinoSerial.Open();
+                    ArduinoSerial.WriteTimeout = 1;
                     serialThread = new Thread(ArduinoSerial_DataReceived)
                     {
                         IsBackground = true
@@ -98,69 +102,72 @@ namespace ArduinoRGBController
             {
                 try
                 {
-                    var tmp = ArduinoSerial.ReadLine();
-                    Debug.WriteLine(tmp);
-                    if (tmp.Contains("R"))
+                    lock (SerialThreadLock)
                     {
-                        if (true)
+                        var tmp = ArduinoSerial.ReadLine();
+                        Debug.WriteLine(tmp);
+                        if (tmp.Contains("H"))
                         {
-                            if (MsgRepeat || !ActionDone)
+                            if (MsgRepeat || lastFired.sender != null)
                             {
-                                if (lastFired.sender == null)
-                                {
-                                    lastFired = lastSent;
-                                }
-                                MsgRepeat = false;
+                                ArduinoSerial.Write("Y");
+                                Debug.WriteLine("Y");
                             }
-                            if (lastFired.sender != null)
+                            //else
+                            //{
+                            //    ArduinoSerial.Write("N");
+                            //    Debug.WriteLine("N");
+                            //}
+                        }
+                        else if (tmp.Contains("done"))
+                        {
+                            ActionDone = true;
+                        }
+                        else if (tmp.Contains("rep"))
+                        {
+                            MsgRepeat = true;
+                        }
+                        else if (tmp.Contains("R"))
+                        {
+                            if (true)
                             {
-                                ActionDone = false;
-                                Dispatcher.Invoke(() =>
+                                if (MsgRepeat || !ActionDone)
                                 {
-                                    if (lastFired.sender is Button)
+                                    if (lastFired.sender == null)
                                     {
-                                        ToggleAnimReal(lastFired.sender, (MouseButtonEventArgs)lastFired.e);
+                                        lastFired = lastSent;
                                     }
-                                    else if (lastFired.sender is Slider)
+                                    MsgRepeat = false;
+                                }
+                                if (lastFired.sender != null)
+                                {
+                                    ActionDone = false;
+                                    Dispatcher.Invoke(() =>
                                     {
-                                        if ((lastFired.sender as Slider).Name == "brightness")
+                                        if (lastFired.sender is Button)
                                         {
-                                            brightness_ValueChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<double>)lastFired.e);
+                                            ToggleAnimReal(lastFired.sender, (MouseButtonEventArgs)lastFired.e);
+                                        }
+                                        else if (lastFired.sender is Slider)
+                                        {
+                                            if ((lastFired.sender as Slider).Name == "brightness")
+                                            {
+                                                brightness_ValueChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<double>)lastFired.e);
+                                            }
+                                            else
+                                            {
+                                                animSpeed_ValueChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<double>)lastFired.e);
+                                            }
                                         }
                                         else
                                         {
-                                            animSpeed_ValueChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<double>)lastFired.e);
+                                            ColorPicker_SelectedColorChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<Color?>)lastFired.e);
                                         }
-                                    }
-                                    else
-                                    {
-                                        ColorPicker_SelectedColorChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<Color?>)lastFired.e);
-                                    }
-                                });
-                                lastSent = lastFired;
-                                lastFired.sender = null;
+                                    });
+                                    lastSent = lastFired;
+                                    lastFired.sender = null;
+                                }
                             }
-                        }
-                    }
-                    else if (tmp.Contains("done"))
-                    {
-                        ActionDone = true;
-                    }
-                    else if (tmp.Contains("rep"))
-                    {
-                        MsgRepeat = true;
-                    }
-                    else if (tmp.Contains("H"))
-                    {
-                        if (MsgRepeat || lastFired.sender != null)
-                        {
-                            ArduinoSerial.Write("Y");
-                            Debug.WriteLine("Y");
-                        }
-                        else
-                        {
-                            ArduinoSerial.Write("N");
-                            Debug.WriteLine("N");
                         }
                     }
                 }
@@ -370,10 +377,12 @@ namespace ArduinoRGBController
                 case WindowState.Normal:
                     notifyIcon.Visibility = Visibility.Hidden;
                     ShowInTaskbar = true;
+                    Monitor.Exit(SerialThreadLock);
                     break;
                 case WindowState.Minimized:
                     notifyIcon.Visibility = Visibility.Visible;
                     ShowInTaskbar = false;
+                    Monitor.Enter(SerialThreadLock);
                     break;
                 case WindowState.Maximized:
                     break;
