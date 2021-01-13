@@ -29,35 +29,43 @@
 
 
         <Label Grid.Row="1" Grid.Column="1" Margin="5,5,5,5" HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="mainText" Content="No arduino" FontSize="24"/>
-        <StackPanel Orientation="Horizontal" 
-                    Grid.Row="2" 
-                    Grid.Column="0" 
-                    Grid.ColumnSpan="3" 
-                    Margin="5,5,5,5" 
-                    HorizontalAlignment="Center" 
-                    VerticalAlignment="Bottom" 
-                    Grid.IsSharedSizeScope="True">
-            <Grid>
+        <Grid Grid.Row="2" 
+              Grid.Column="0" 
+              Grid.ColumnSpan="3" 
+              Margin="5,5,5,5" 
+              HorizontalAlignment="Center" 
+              VerticalAlignment="Bottom" 
+              Grid.IsSharedSizeScope="True">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Column="0" Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition SharedSizeGroup="Toggles1"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="toggleRainbow" Margin="5,5,5,5" Grid.Column="1" Grid.Row="2" PreviewMouseDown="ToggleAnim">
+                <Button x:Name="toggleRainbow" Margin="5,5,5,5" PreviewMouseDown="ToggleAnim">
                     <Label FontSize="24">
                         Rainbow
                     </Label>
                 </Button>
             </Grid>
-            <Grid>
+            <Grid Grid.Column="1" Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition SharedSizeGroup="Toggles1"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="toggleStatic" Margin="5,5,5,5" Grid.Column="1" Grid.Row="2" PreviewMouseDown="ToggleAnim">
+                <Button x:Name="toggleStatic" Margin="5,5,5,5" PreviewMouseDown="ToggleAnim">
                     <Label FontSize="24">
                         Static
                     </Label>
                 </Button>
             </Grid>
-            <Grid>
+            <Grid Grid.Column="3" Grid.Row="0">
                 <Button Grid.Column="2" 
                 Grid.Row="2" 
                 HorizontalAlignment="Left" 
@@ -65,10 +73,40 @@
                 Margin="5,5,5,5" 
                 FontSize="24" 
                 Content="Pick color" 
-                PreviewMouseLeftButtonDown="Button_PreviewMouseLeftButtonDown"/>
+                PreviewMouseLeftButtonDown="StaticColorButton_PreviewMouseLeftButtonDown"/>
             </Grid>
-        </StackPanel>
-        
+            <Grid Grid.Column="0" Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="Toggles1"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="toggleRainbowSin" Margin="5,5,5,5" PreviewMouseDown="ToggleAnim">
+                    <Label FontSize="24">
+                        Rainbow sin
+                    </Label>
+                </Button>
+            </Grid>
+            <Grid Grid.Column="1" Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="Toggles1"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="toggleGradient" Margin="5,5,5,5" PreviewMouseDown="ToggleAnim">
+                    <Label FontSize="24">
+                        Gradient
+                    </Label>
+                </Button>
+            </Grid>
+            <Grid Grid.Column="3" Grid.Row="1">
+                <Button Grid.Column="2" 
+                Grid.Row="2" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Bottom" 
+                Margin="5,5,5,5" 
+                FontSize="24" 
+                Content="Pick gradient" 
+                PreviewMouseLeftButtonDown="GradientButton_PreviewMouseLeftButtonDown"/>
+            </Grid>
+        </Grid>
+
         <Grid Margin="5,5,5,5" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition MinWidth="100" MaxWidth="100"/>

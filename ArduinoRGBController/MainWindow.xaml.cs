@@ -55,6 +55,8 @@ namespace ArduinoRGBController
 
         public static object SerialThreadLock { get; set; }
 
+        private GradientPicker gradientPicker { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -148,7 +150,7 @@ namespace ArduinoRGBController
                                         {
                                             ToggleAnimReal(lastFired.sender, (MouseButtonEventArgs)lastFired.e);
                                         }
-                                        else if (lastFired.sender is Slider)
+                                        else if (lastFired.sender is Slider && !(lastFired.sender as Slider).Name.StartsWith("Grad"))
                                         {
                                             if ((lastFired.sender as Slider).Name == "brightness")
                                             {
@@ -159,9 +161,13 @@ namespace ArduinoRGBController
                                                 animSpeed_ValueChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<double>)lastFired.e);
                                             }
                                         }
-                                        else
+                                        else if (lastFired.sender is Xceed.Wpf.Toolkit.ColorCanvas)
                                         {
                                             ColorPicker_SelectedColorChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<Color?>)lastFired.e);
+                                        }
+                                        else if (lastFired.sender is Xceed.Wpf.Toolkit.ColorSpectrumSlider)
+                                        {
+                                            GradientPicker_SelectedColorChangedReal(lastFired.sender, (RoutedPropertyChangedEventArgs<double>)lastFired.e);
                                         }
                                     });
                                     lastSent = lastFired;
@@ -269,12 +275,20 @@ namespace ArduinoRGBController
                 switch (btn.Name)
                 {
                     case "toggleRainbow":
-                        ArduinoSerial.Write("$1^");
-                        Debug.WriteLine("$1^");
+                        ArduinoSerial.Write("$1, 1^");
+                        Debug.WriteLine("$1, 1^");
                         break;
                     case "toggleStatic":
-                        ArduinoSerial.Write("$2^");
-                        Debug.WriteLine("$2^");
+                        ArduinoSerial.Write("$1, 2^");
+                        Debug.WriteLine("$1, 2^");
+                        break;
+                    case "toggleRainbowSin":
+                        ArduinoSerial.Write("$1, 3^");
+                        Debug.WriteLine("$1, 3^");
+                        break;
+                    case "toggleGradient":
+                        ArduinoSerial.Write("$1, 4^");
+                        Debug.WriteLine("$1, 4^");
                         break;
                     default:
                         break;
@@ -331,7 +345,7 @@ namespace ArduinoRGBController
         }
 
 
-        private void Button_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void StaticColorButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var picker = new StaticColorPicker
             {
@@ -343,6 +357,22 @@ namespace ArduinoRGBController
 
             }
             picker.colorPicker.SelectedColorChanged -= ColorPicker_SelectedColorChanged;
+        }
+
+        private void GradientButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            gradientPicker = new GradientPicker
+            {
+                Owner = this
+            };
+            gradientPicker.GradientBegin.ValueChanged += GradientPicker_SelectedColorChanged;
+            gradientPicker.GradientEnd.ValueChanged += GradientPicker_SelectedColorChanged;
+            if (gradientPicker.ShowDialog() == true)
+            {
+
+            }
+            gradientPicker.GradientBegin.ValueChanged -= GradientPicker_SelectedColorChanged;
+            gradientPicker.GradientEnd.ValueChanged -= GradientPicker_SelectedColorChanged;
         }
 
 
@@ -361,6 +391,19 @@ namespace ArduinoRGBController
             var color = e.NewValue.Value;
             ArduinoSerial.Write($"$5, {color.R}, {color.G}, {color.B}^");
             Debug.WriteLine($"$5, {color.R}, {color.G}, {color.B}^");
+        }
+
+
+        private void GradientPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            CheckConnection(sender, e);
+        }
+
+
+        private void GradientPicker_SelectedColorChangedReal(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            ArduinoSerial.Write($"$6, {(int)((360.0 - gradientPicker.GradientBegin.Value) * 255.0 / 360.0)}, {(int)((360.0 - gradientPicker.GradientEnd.Value) * 255.0 / 360.0)}^");
+            Debug.WriteLine($"$6, {(int)((360.0 - gradientPicker.GradientBegin.Value) * 255.0 / 360.0)}, {(int)((360.0 - gradientPicker.GradientEnd.Value) * 255.0 / 360.0)}^");
         }
 
 

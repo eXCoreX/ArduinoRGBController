@@ -9,13 +9,9 @@
         Title="StaticColorPicker"
         SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
         <StackPanel Orientation="Vertical" Margin="5,5,5,5">
             <xtk:ColorCanvas Margin="5,5,5,5" x:Name="colorPicker" UsingAlphaChannel="False"/>
-            <Button IsDefault="True" Content="OK" FontSize="24" Margin="5,5,5,5" Click="Button_Click"/>
+            <Button IsDefault="True" Content="OK" FontSize="24" Margin="5,5,5,5" Click="Button_Click" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </StackPanel>
     </Grid>
 </Window>
