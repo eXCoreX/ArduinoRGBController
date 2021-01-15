@@ -21,8 +21,17 @@ namespace ArduinoRGBController
 
         public void Execute(object parameter)
         {
-            (parameter as MainWindow).WindowState = WindowState.Normal;
-            (parameter as MainWindow).Activate();
+            if (!(Application.Current.MainWindow.Visibility == Visibility.Visible))
+            {
+                Application.Current.MainWindow.Visibility = Visibility.Visible;
+                Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
+                    new Action(delegate ()
+                    {
+                        Application.Current.MainWindow.WindowState = WindowState.Normal;
+                        Application.Current.MainWindow.Activate();
+                    })
+                );
+            }
         }
     }
 
@@ -420,12 +429,14 @@ namespace ArduinoRGBController
                 case WindowState.Normal:
                     notifyIcon.Visibility = Visibility.Hidden;
                     ShowInTaskbar = true;
+                    Visibility = Visibility.Visible;
                     Monitor.Exit(SerialThreadLock);
                     ArduinoSerial.Open();
                     break;
                 case WindowState.Minimized:
                     notifyIcon.Visibility = Visibility.Visible;
                     ShowInTaskbar = false;
+                    Visibility = Visibility.Collapsed;
                     Monitor.Enter(SerialThreadLock);
                     ArduinoSerial.Close();
                     break;
